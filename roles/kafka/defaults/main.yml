@@ -1,0 +1,21 @@
+---
+# Namespace for Longhorn
+kafka_cluster_name: my-cluster
+
+# Kafka version
+kafka_version: 3.2.0
+
+# Kafka replicas
+kafka_replicas: 3
+
+# Zookeeper
+kafka_zookeeper_replicas: 3
+
+# Storage Settings
+kafka_storage_size: "5Gi"
+kafka_storage_class: "longhorn"
+kafka_zookeeper_storage_class: "{{ kafka_storage_class }}"
+kafka_zookeeper_storage_size: "{{ kafka_storage_size }}"
+
+# Enable service mesh
+enable_linkerd: true

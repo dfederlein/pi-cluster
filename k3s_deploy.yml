@@ -55,6 +55,8 @@
       tags: ['linkerd-viz']
     - role: logging/k3s
       tags: ['logging']
+    - role: kafka
+      tags: ['kafka']
 
 - name: Deploy fluentbit on control nodes (gateway and pimaster)
   hosts: control

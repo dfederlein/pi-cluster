@@ -1,0 +1,46 @@
+---
+
+- name: Create kafka namespace.
+  kubernetes.core.k8s:
+    name: "{{ k3s_kafka_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+
+- name: Annotate namespace to enable linkerd
+  kubernetes.core.k8s:
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: "{{ k3s_kafka_namespace }}"
+        annotations:
+          linkerd.io/inject: enabled
+  when: enable_linkerd
+
+- name: Add Strimzi chart repo.
+  kubernetes.core.helm_repository:
+    name: strimzi
+    repo_url: "https://strimzi.io/charts/"
+
+- name: Deploy Strimzi Helm chart.
+  kubernetes.core.helm:
+    name: strimzi-kafka-operator
+    chart_ref: strimzi/strimzi-kafka-operator
+    update_repo_cache: true
+    release_namespace: "{{ k3s_kafka_namespace }}"
+    state: present
+
+- name: Wait for pods to be ready
+  command:
+    cmd: "kubectl wait --for=condition=Ready pod --namespace={{ k3s_kafka_namespace }} --all --timeout=600s"
+  register: strimzi_operator_pods_ready
+  changed_when: false
+
+- name: Create Kafka cluster
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'templates/' + item ) }}"
+    state: present
+  with_items:
+    - kafka_cluster.yml.j2
