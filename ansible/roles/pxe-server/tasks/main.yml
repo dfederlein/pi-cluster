@@ -1,0 +1,56 @@
+---
+- name: Create the PXE server directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0750
+  become: false
+  with_items:
+    - "{{ pxe_installation_path }}"
+    - "{{ pxe_config_path }}"
+    - "{{ pxe_data_img_path }}"
+    - "{{ pxe_data_tftp_path }}"
+    - "{{ pxe_data_cloud_init_path }}"
+
+- name: Copy docker-compose file
+  copy:
+    dest: "{{ pxe_installation_path }}/docker-compose.yml"
+    src: "files/docker-compose.yml"
+    owner: "{{ pxe_user }}"
+    mode: 0644
+  become: false
+
+- name: Download Ubuntu RPI image
+  ansible.builtin.get_url:
+    url: "{{ img_url }}"
+    dest: "{{ pxe_data_img_path }}/{{ img_url | basename }}"
+    checksum: "{{ img_checksum }}"
+    mode: 0644
+  register: rpi_xz_img
+
+- name: Decompress Ubuntu RPI Image
+  ansible.builtin.command:
+    cmd: "unxz -k {{ rpi_xz_img.dest }}"
+    creates: "{{ pxe_data_img_path }}/{{ img_url | basename | splitext | first }}"
+
+- name: Extract rpi Boot and Root images
+  ansible.builtin.command:
+    cmd: "7z x -o{{ pxe_data_img_path }} {{ pxe_data_img_path }}/{{ img_url | basename | splitext | first }} 0.fat 2.img"
+    creates: "{{ pxe_data_img_path }}/files/data/img/2.img"
+
+- name: Make Boot and Root Folders with correct permissions
+  ansible.builtin.file:
+    path: "{{ pxe_data_img_path }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - boot
+    - root
+
+- name: Extract rpi Boot and Root Partition
+  ansible.builtin.command:
+    cmd: "7z x -o{{ pxe_data_img_path }}/{{ item.dest }} {{ pxe_data_img_path }}/{{ item.src }}"
+    creates: "{{ pxe_data_img_path }}/{{ item.dest }}/{{ item.creates }}"
+  loop:
+    - {src: 0.fat, dest: boot, creates: start4.elf}
+    - {src: 2.img, dest: root, creates: etc/motd}

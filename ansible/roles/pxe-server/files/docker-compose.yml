@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  # dhcp, tftp server
+  dnsmasq:
+    build: ./dnsmasq
+    container_name: pxe-dnsmasq
+    volumes:
+      - ./config/pxe/dnsmasq.conf:/etc/dnsmasq.conf
+      - ./data/img/boot/:/tftp/
+      - ./config/pxe/grub.cfg:/tftp/grub.cfg
+      - ./data/os/EFI/BOOT/grubx64.efi:/tftp/grubx64.efi
+      - ./data/os/images/pxeboot/initrd.img:/tftp/initrd.img
+      - ./data/os/images/pxeboot/vmlinuz:/tftp/vmlinuz
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+  http:
+    image: nginx:1.21-alpine
+    container_name: pxe-http
+    network_mode: host
+    volumes:
+      - ./data/os:/usr/share/nginx/html/os
+      - ./data/cloud-init/:/usr/share/nginx/html/cloud-init
+    environment:
+      NGINX_PORT: 80

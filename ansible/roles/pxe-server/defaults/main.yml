@@ -1,0 +1,13 @@
+---
+# pxe Installation variables
+
+pxe_user: "{{ lookup('env', 'USER') }}"
+pxe_installation_path: "{{ lookup('env', 'HOME') }}/pxe"
+pxe_config_path: "{{ pxe_installation_path }}/config"
+pxe_data_cloud_init_path: "{{ pxe_installation_path }}/data/cloud-init"
+pxe_data_tftp_path: "{{ pxe_installation_path }}/data/tftp"
+pxe_data_img_path: "{{ pxe_installation_path }}/data/img"
+
+# Ubuntu 22.04 Raspberry Pi
+img_url: "https://cdimage.ubuntu.com/ubuntu/releases/22.04/release/ubuntu-22.04.1-preinstalled-server-arm64+raspi.img.xz"
+img_checksum: "sha256:5d0661eef1a0b89358159f3849c8f291be2305e5fe85b7a16811719e6e8ad5d1"
